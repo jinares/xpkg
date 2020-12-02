@@ -20,6 +20,7 @@ func TestGUID(t *testing.T) {
 }
 
 func TestHashID(t *testing.T) {
+	dt := time.Now()
 	m := 100
 	id := GUID()
 	k := xmd5(id)
@@ -35,4 +36,7 @@ func TestHashID(t *testing.T) {
 	hash = (hash * 1) % int64(m)
 	fmt.Println(hash + 1)
 	fmt.Println(HashID("793055748", 100))
+	time.Sleep(100 * time.Millisecond)
+	s := time.Since(dt)
+	fmt.Println(s.Milliseconds())
 }
