@@ -2,25 +2,33 @@ package xetcd
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/jinares/xpkg/xlog"
+	"github.com/jinares/xpkg/xtools"
+	"google.golang.org/grpc/codes"
+	"runtime/debug"
 
 	"go.etcd.io/etcd/clientv3/concurrency"
 )
 
-//NewMutex NewMutex
-func NewMutex(cli *XClientV3, key string, f func() error, sopts ...concurrency.SessionOption) error {
-	if cli == nil || cli.Client == nil {
-		return errors.New("etcdv3 cli nil")
+type (
+	MutexHandler func() error
+)
+
+//Mutex Mutex
+func Mutex(key string, f MutexHandler, sopts ...concurrency.SessionOption) error {
+	cli, err := GetClientv3()
+	if err != nil {
+		return err
 	}
-	session, err := concurrency.NewSession(cli.Client, sopts...)
+	session, err := concurrency.NewSession(cli, sopts...)
 	if err != nil {
 		return err
 	}
 
 	defer session.Close()
-
-	mu := concurrency.NewMutex(session, cli.GetRoot()+"/"+key)
+	fmt.Println("linkkey:", LinkKey(key))
+	mu := concurrency.NewMutex(session, LinkKey(key))
 
 	if err := mu.Lock(context.TODO()); err != nil {
 		return err
@@ -28,6 +36,7 @@ func NewMutex(cli *XClientV3, key string, f func() error, sopts ...concurrency.S
 	defer func() {
 		err := mu.Unlock(context.TODO())
 		if err != nil {
+			xlog.Err(err).Error("etcd-mutex-unlock-fail")
 
 		}
 	}()
@@ -35,27 +44,20 @@ func NewMutex(cli *XClientV3, key string, f func() error, sopts ...concurrency.S
 	return f()
 
 }
-
-//NewElection NewElection
-func NewElection(cli *XClientV3, key, val string, f func() error, sopts ...concurrency.SessionOption) error {
-	if cli == nil || cli.Client == nil {
-		return errors.New("etcdv3 cli nil")
-	}
-	session, err := concurrency.NewSession(cli.Client, sopts...)
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-	e1 := concurrency.NewElection(session, cli.GetRoot()+"/"+key)
-	if err := e1.Campaign(context.Background(), val); err != nil {
-		return err
-	}
+func MutexLoopHandler(key string, fn MutexHandler, sopts ...concurrency.SessionOption) error {
 	defer func() {
-		err := e1.Resign(context.TODO())
-		if err != nil {
-			xlog.Error(err.Error())
+		if e := recover(); e != nil {
+			//debug.PrintStack()
+			stack := debug.Stack()
+
+			xlog.Infof("mutex-recover-fail:msg:  %v stack: %s", e, string(stack))
 		}
 	}()
-
-	return f()
+	for {
+		err := Mutex(key, fn, sopts...)
+		if err != nil {
+			xlog.Err(err).Error("mutex-fail")
+		}
+	}
+	return xtools.XErr(codes.Internal, "mutex-fail")
 }

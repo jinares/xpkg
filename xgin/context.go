@@ -1,4 +1,4 @@
-qpackage xgin
+package xgin
 
 import (
 	"bytes"

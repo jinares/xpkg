@@ -2,7 +2,7 @@ package xetcd
 
 import (
 	"context"
-	"gitlab.xunlei.cn/acc-vip/asset-engine/pkg/xlog"
+	"github.com/jinares/xpkg/xlog"
 	"go.etcd.io/etcd/clientv3/concurrency"
 )
 
@@ -24,7 +24,7 @@ func Election(ctx context.Context, key, val string, fn MutexHandler, sopts ...co
 	defer func() {
 		err := e1.Resign(ctx)
 		if err != nil {
-			xlog.WithError(nil, err).Error("etcd-election-fail")
+			xlog.Err(err).Error("etcd-election-fail")
 		}
 	}()
 	return fn()

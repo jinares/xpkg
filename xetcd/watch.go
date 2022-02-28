@@ -24,17 +24,21 @@ type (
 	WatchDirNodeFunc func(key, val string) error
 )
 
-func WatchNode(ctx context.Context, client *clientv3.Client, path string, action WatchNodeFunc) error {
-	val, err := GetNode(ctx, client, path)
+func WatchNode(ctx context.Context, path string, action WatchNodeFunc) error {
+	client, err := GetClientv3()
+	if err != nil {
+		return err
+	}
+	val, err := getNode(ctx, client, path)
 	if err == nil && val != "" {
 		action(val)
 	}
 	go func() {
 		for {
-			cc := client.Watch(context.Background(), path)
+			cc := client.Watch(ctx, path)
 			for wres := range cc {
 				fmt.Println(wres)
-				val, err := GetNode(ctx, client, path)
+				val, err := getNode(ctx, client, path)
 				if err == nil && val != "" {
 					action(val)
 				}
@@ -45,8 +49,12 @@ func WatchNode(ctx context.Context, client *clientv3.Client, path string, action
 
 }
 
-func WatchDirNode(ctx context.Context, client *clientv3.Client, path string, action WatchDirNodeFunc) error {
-	val, err := GetDirNode(ctx, client, path)
+func WatchDirNode(ctx context.Context, path string, action WatchDirNodeFunc) error {
+	client, err := GetClientv3()
+	if err != nil {
+		return err
+	}
+	val, err := getDirNode(ctx, client, path)
 	if err == nil {
 		for k, v := range val {
 			action(k, v)
@@ -54,7 +62,7 @@ func WatchDirNode(ctx context.Context, client *clientv3.Client, path string, act
 	}
 	go func() {
 		for {
-			cc := client.Watch(context.Background(), path, clientv3.WithPrefix())
+			cc := client.Watch(ctx, path, clientv3.WithPrefix())
 			for wresp := range cc {
 
 				for _, ev := range wresp.Events {
@@ -78,7 +86,7 @@ func WatchDirNode(ctx context.Context, client *clientv3.Client, path string, act
 }
 
 //GetNode
-func GetNode(ctx context.Context, client *clientv3.Client, key string) (string, error) {
+func getNode(ctx context.Context, client *clientv3.Client, key string) (string, error) {
 	res, err := client.Get(ctx, key)
 	if err != nil {
 		return "", err
@@ -88,9 +96,9 @@ func GetNode(ctx context.Context, client *clientv3.Client, key string) (string, 
 	}
 	return string(res.Kvs[0].Value), nil
 }
-func GetDirNode(ctx context.Context, client *clientv3.Client, path string) (map[string]string, error) {
+func getDirNode(ctx context.Context, client *clientv3.Client, path string) (map[string]string, error) {
 
-	res, err := client.Get(context.Background(), path, clientv3.WithPrefix())
+	res, err := client.Get(ctx, path, clientv3.WithPrefix())
 	if err != nil {
 		return map[string]string{}, err
 	} else {

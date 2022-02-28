@@ -8,6 +8,7 @@ go 1.14
 require (
 	github.com/allegro/bigcache/v2 v2.2.5 // indirect
 	github.com/allegro/bigcache/v3 v3.0.0
+	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
 	github.com/astaxie/beego v1.12.3
 	github.com/beltran/gohive v1.4.0
 	github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833
@@ -23,10 +24,14 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 	github.com/grpc-ecosystem/grpc-gateway v1.11.2 // indirect
+	github.com/myzhan/boomer v1.6.0
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/uber/jaeger-client-go v2.20.1+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
+	github.com/zeromq/goczmq v4.1.0+incompatible // indirect
+	github.com/zeromq/gomq v0.0.0-20201031135124-cef4e507bb8e // indirect
+	github.com/zeromq/gomq/zmtp v0.0.0-20201031135124-cef4e507bb8e // indirect
 	go.etcd.io/etcd v0.0.0-20191011172313-6d8052314b9e
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
 	golang.org/x/text v0.3.6
@@ -39,5 +44,5 @@ require (
 
 replace (
 	go.etcd.io/etcd => github.com/etcd-io/etcd v0.0.0-20191021022006-5dc12f27251a
-	google.golang.org/grpc => google.golang.org/grpc v1.28.1
+	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 )
